@@ -1,0 +1,26 @@
+{
+  "name": "naruto-bot",
+  "description": "Telegram bot for managing deposits in the Naruto game",
+  "repository": "https://github.com/Darklightning2008/Uzumaki.git",
+  "env": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "BOT_TOKEN": {
+      "description": "Telegram bot token",
+      "required": true
+    },
+    "MONGO_URI": {
+      "description": "MongoDB connection string",
+      "required": true
+    }
+  },
+  "addons": [
+    "heroku/python"
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-python.git"
+    }
+  ],
+  "stack": "heroku-20"
+}
