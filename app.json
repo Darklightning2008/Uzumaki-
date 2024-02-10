@@ -1,7 +1,7 @@
 {
   "name": "naruto-bot",
   "description": "Telegram bot for managing deposits in the Naruto game",
-  "repository": "https://github.com/Darklightning2008/Uzumaki.git",
+  "repository": "https://github.com/yourusername/your-repo.git",
   "env": {
     "PYTHONUNBUFFERED": "1",
     "PYTHONDONTWRITEBYTECODE": "1",
@@ -11,6 +11,14 @@
     },
     "MONGO_URI": {
       "description": "MongoDB connection string",
+      "required": true
+    },
+    "TELEGRAM_API_ID": {
+      "description": "Telegram API ID",
+      "required": true
+    },
+    "TELEGRAM_API_HASH": {
+      "description": "Telegram API hash",
       "required": true
     }
   },
