@@ -1,4 +1,8 @@
 build:
   docker:
-    web: Dockerfile
     worker: Dockerfile
+  config:
+    PYTHON_VERSION: 3.8
+
+run:
+  worker: python bot/naruto_bot.py
