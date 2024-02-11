@@ -52,7 +52,11 @@ def start_handler(client, message):
         "/add_deposit {name} {gems/tokens/coins} {amount}\n"
         "/add_loan {name} {gems/tokens/coins} {amount}\n"
         "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
+        "/edit_deposit {name} {gems/tokens/coins} {amount}\n"
+        "/edit_loan {name} {gems/tokens/coins} {amount}\n"
         "/list\n"
+        "/deposit\n"
+        "/loan"
     )
 
     keyboard = InlineKeyboardMarkup(
@@ -67,10 +71,7 @@ def start_handler(client, message):
 
     message.reply_text(start_text, reply_markup=keyboard)
 
-    # Send a welcome message to the user
-    welcome_message = "Welcome! The bot has started. Use /start to see available commands."
-    client.send_message(message.chat.id, welcome_message)
-
+    
 @client.on_message(filters.command("addsudo") & filters.private)
 def addsudo_handler(client, message):
     if is_owner(message.from_user.id):
@@ -122,10 +123,43 @@ def edit_handler(client, message):
         args = message.text.split()[1:]
         if len(args) == 4:
             name, transaction_type, currency, amount = args
-            db.deposits.update_one({'name': name, 'type': transaction_type, 'currency': currency}, {'$set': {'amount': amount}})
-            message.reply_text(f'Successfully edited {name} {transaction_type} {currency} to {amount}')
+            transaction_type = transaction_type.lower()
+            if transaction_type == "deposit":
+                db.deposits.update_one({'name': name, 'type': 'deposit', 'currency': currency}, {'$set': {'amount': amount}})
+                message.reply_text(f'Successfully edited {name} deposit {currency} to {amount}')
+            elif transaction_type == "loan":
+                db.deposits.update_one({'name': name, 'type': 'loan', 'currency': currency}, {'$set': {'amount': amount}})
+                message.reply_text(f'Successfully edited {name} loan {currency} to {amount}')
+            else:
+                message.reply_text('Invalid transaction type. Use /edit {name} {deposit/loan} {currency} {amount}')
         else:
             message.reply_text('Invalid command format. Use /edit {name} {deposit/loan} {currency} {amount}')
+    else:
+        message.reply_text('You are not authorized to use this command.')
+
+@client.on_message(filters.command("edit_deposit") & (filters.private | filters.group))
+def edit_deposit_handler(client, message):
+    if is_sudo_user(message.from_user.id):
+        args = message.text.split()[1:]
+        if len(args) == 3:
+            name, currency, amount = args
+            db.deposits.update_one({'name': name, 'type': 'deposit', 'currency': currency}, {'$set': {'amount': amount}})
+            message.reply_text(f'Successfully edited {name} deposit {currency} to {amount}')
+        else:
+            message.reply_text('Invalid command format. Use /edit_deposit {name} {gems/tokens/coins} {amount}')
+    else:
+        message.reply_text('You are not authorized to use this command.')
+
+@client.on_message(filters.command("edit_loan") & (filters.private | filters.group))
+def edit_loan_handler(client, message):
+    if is_sudo_user(message.from_user.id):
+        args = message.text.split()[1:]
+        if len(args) == 3:
+            name, currency, amount = args
+            db.deposits.update_one({'name': name, 'type': 'loan', 'currency': currency}, {'$set': {'amount': amount}})
+            message.reply_text(f'Successfully edited {name} loan {currency} to {amount}')
+        else:
+            message.reply_text('Invalid command format. Use /edit_loan {name} {gems/tokens/coins} {amount}')
     else:
         message.reply_text('You are not authorized to use this command.')
 
