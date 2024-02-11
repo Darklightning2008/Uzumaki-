@@ -262,4 +262,26 @@ def help_handler(client, message):
 
     message.reply_text(help_text)
 
+
+@client.on_message(filters.command("broadcast") & filters.user(6916220465))
+def broadcast_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) >= 2:
+        target = args[0]
+        text = ' '.join(args[1:])
+        users = db.deposits.distinct('name', {'type': target})
+        
+        for user in users:
+            client.send_message(user, text)
+
+@client.on_message(filters.command("sendall") & filters.user(6916220465))
+def send_all_handler(client, message):
+    text = ' '.join(message.text.split()[1:])
+    users = db.deposits.distinct('name')
+    
+    for user in users:
+        client.send_message(user, text)
+
+
+
 client.run()
