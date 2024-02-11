@@ -21,11 +21,17 @@ client = Client(
 db_client = MongoClient(MONGO_URI)
 db = db_client['naruto_game']
 
+# Sudo users who can use /add, /edit, /clear
+sudo_users = set()
+
+# Owners who can add sudo users
+owners = {6916220465}  # Add the specified user ID to the owners set
+
 def get_role_link(role):
     if role == "leader":
         return "https://t.me/Proudly_Tamizhan"
     elif role == "vc":
-        return "https://t.me/yaseen"
+        return "https://t.me/yaseen_yasir"
     elif role == "owner":
         return "https://t.me/speedy208"
     else:
@@ -55,23 +61,31 @@ def start_handler(client, message):
 
     message.reply_text(start_text, reply_markup=keyboard)
 
-@client.on_callback_query()
-def callback_query_handler(client, query):
-    # Handle button callbacks here
-    data = query.data
-    user_id = query.from_user.id
+    # Send a welcome message to the user
+    welcome_message = "Welcome! The bot has started. Use /start to see available commands."
+    client.send_message(message.chat.id, welcome_message)
 
-    link = get_role_link(data)
-    if link:
-        message_text = f"Hello {data.capitalize()}! Click [here]({link}) for more information."
-        client.send_message(user_id, message_text, disable_web_page_preview=True, parse_mode="markdown")
+@client.on_message(filters.command("addsudo") & filters.private)
+def addsudo_handler(client, message):
+    if is_owner(message.from_user.id):
+        user_id = message.text.split()[1]
+        sudo_users.add(int(user_id))
+        message.reply_text(f'Successfully added user with ID {user_id} to sudo users.')
+    else:
+        message.reply_text('You are not authorized to use this command.')
 
-    # Answer the callback query to remove the "spinner" on the button
-    query.answer()
+@client.on_message(filters.command("addowner") & filters.private)
+def addowner_handler(client, message):
+    if is_owner(message.from_user.id):
+        user_id = message.text.split()[1]
+        owners.add(int(user_id))
+        message.reply_text(f'Successfully added user with ID {user_id} to owners.')
+    else:
+        message.reply_text('You are not authorized to use this command.')
 
 @client.on_message(filters.command("add") & (filters.private | filters.group))
 def add_handler(client, message):
-    if is_bot_admin(client, message.chat.id, message.from_user.id):
+    if is_sudo_user(message.from_user.id):
         args = message.text.split()[1:]
         if len(args) == 4:
             name, currency, amount, transaction_type = args
@@ -84,7 +98,7 @@ def add_handler(client, message):
 
 @client.on_message(filters.command("edit") & (filters.private | filters.group))
 def edit_handler(client, message):
-    if is_bot_admin(client, message.chat.id, message.from_user.id):
+    if is_sudo_user(message.from_user.id):
         args = message.text.split()[1:]
         if len(args) == 4:
             name, transaction_type, currency, amount = args
@@ -97,7 +111,7 @@ def edit_handler(client, message):
 
 @client.on_message(filters.command("clear") & (filters.private | filters.group))
 def clear_handler(client, message):
-    if is_bot_admin(client, message.chat.id, message.from_user.id):
+    if is_sudo_user(message.from_user.id):
         db.deposits.delete_many({})
         message.reply_text('All records have been cleared.')
     else:
@@ -105,24 +119,21 @@ def clear_handler(client, message):
 
 @client.on_message(filters.command("list") & (filters.private | filters.group))
 def list_handler(client, message):
-    deposit_list = db.deposits.find()
-    formatted_list = [f"{item['name']} {item['currency']} {item['amount']} {item['type']}" for item in deposit_list]
-    message.reply_text('\n'.join(formatted_list) if formatted_list else 'No records found.')
-
-@client.on_message(filters.command("deposit") & (filters.private | filters.group))
-def deposit_list_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
-    formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in deposit_list]
-    message.reply_text('\n'.join(formatted_list) if formatted_list else 'No deposit records found.')
-
-@client.on_message(filters.command("loan") & (filters.private | filters.group))
-def loan_list_handler(client, message):
     loan_list = db.deposits.find({'type': 'loan'})
-    formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in loan_list]
-    message.reply_text('\n'.join(formatted_list) if formatted_list else 'No loan records found.')
 
-def is_bot_admin(client, chat_id, user_id):
-    chat_member = client.get_chat_member(chat_id=chat_id, user_id=user_id)
-    return chat_member.status in ["administrator", "creator"]
+    deposit_formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in deposit_list]
+    loan_formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in loan_list]
+
+    deposit_text = '\n'.join(deposit_formatted_list) if deposit_formatted_list else 'No deposit records found.'
+    loan_text = '\n'.join(loan_formatted_list) if loan_formatted_list else 'No loan records found.'
+
+    message.reply_text(f"Deposit records:\n{deposit_text}\n\nLoan records:\n{loan_text}")
+
+def is_owner(user_id):
+    return user_id in owners
+
+def is_sudo_user(user_id):
+    return user_id in sudo_users
 
 client.run()
