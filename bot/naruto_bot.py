@@ -122,8 +122,8 @@ def list_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
     loan_list = db.deposits.find({'type': 'loan'})
 
-    deposit_formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in deposit_list]
-    loan_formatted_list = [f"{item['name']} {item['type']} {item['currency']} {item['amount']}" for item in loan_list]
+    deposit_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in deposit_list]
+    loan_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in loan_list]
 
     deposit_text = '\n'.join(deposit_formatted_list) if deposit_formatted_list else 'No deposit records found.'
     loan_text = '\n'.join(loan_formatted_list) if loan_formatted_list else 'No loan records found.'
