@@ -56,7 +56,9 @@ def start_handler(client, message):
         "/edit_loan {name} {gems/tokens/coins} {amount}\n"
         "/list\n"
         "/deposit\n"
-        "/loan"
+        "/loan\n"
+        "/info {name}\n"
+        "/help"
     )
 
     keyboard = InlineKeyboardMarkup(
@@ -71,7 +73,10 @@ def start_handler(client, message):
 
     message.reply_text(start_text, reply_markup=keyboard)
 
-    
+    # Send a welcome message to the user
+    welcome_message = "Welcome! The bot has started. Use /start to see available commands."
+    client.send_message(message.chat.id, welcome_message)
+
 @client.on_message(filters.command("addsudo") & filters.private)
 def addsudo_handler(client, message):
     if is_owner(message.from_user.id):
@@ -168,32 +173,93 @@ def list_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
     loan_list = db.deposits.find({'type': 'loan'})
 
-    deposit_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in deposit_list]
-    loan_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in loan_list]
+    deposit_tokens = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'tokens']
+    deposit_gems = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'gems']
+    deposit_coins = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'coins']
 
-    deposit_text = '\n'.join(deposit_formatted_list) if deposit_formatted_list else 'No deposit records found.'
-    loan_text = '\n'.join(loan_formatted_list) if loan_formatted_list else 'No loan records found.'
+    loan_tokens = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'tokens']
+    loan_gems = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'gems']
+    loan_coins = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'coins']
 
-    message.reply_text(f"Deposit records:\n{deposit_text}\n\nLoan records:\n{loan_text}")
+    deposit_tokens_text = '\n'.join(deposit_tokens) if deposit_tokens else 'No token deposits.'
+    deposit_gems_text = '\n'.join(deposit_gems) if deposit_gems else 'No gem deposits.'
+    deposit_coins_text = '\n'.join(deposit_coins) if deposit_coins else 'No coin deposits.'
+
+    loan_tokens_text = '\n'.join(loan_tokens) if loan_tokens else 'No token loans.'
+    loan_gems_text = '\n'.join(loan_gems) if loan_gems else 'No gem loans.'
+    loan_coins_text = '\n'.join(loan_coins) if loan_coins else 'No coin loans.'
+
+    message.reply_text(
+        f"Token Deposits:\n{deposit_tokens_text}\n\nGem Deposits:\n{deposit_gems_text}\n\nCoin Deposits:\n{deposit_coins_text}\n\n"
+        f"Token Loans:\n{loan_tokens_text}\n\nGem Loans:\n{loan_gems_text}\n\nCoin Loans:\n{loan_coins_text}"
+    )
 
 @client.on_message(filters.command("deposit") & (filters.private | filters.group))
 def deposit_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
-    deposit_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in deposit_list]
-    deposit_text = '\n'.join(deposit_formatted_list) if deposit_formatted_list else 'No deposit records found.'
-    message.reply_text(f"Deposit records:\n{deposit_text}")
+    deposit_tokens = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'tokens']
+    deposit_gems = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'gems']
+    deposit_coins = [f"{item['name']} {item['amount']}" for item in deposit_list if item['currency'] == 'coins']
+
+    deposit_tokens_text = '\n'.join(deposit_tokens) if deposit_tokens else 'No token deposits.'
+    deposit_gems_text = '\n'.join(deposit_gems) if deposit_gems else 'No gem deposits.'
+    deposit_coins_text = '\n'.join(deposit_coins) if deposit_coins else 'No coin deposits.'
+
+    message.reply_text(
+        f"Token Deposits:\n{deposit_tokens_text}\n\nGem Deposits:\n{deposit_gems_text}\n\nCoin Deposits:\n{deposit_coins_text}"
+    )
 
 @client.on_message(filters.command("loan") & (filters.private | filters.group))
 def loan_handler(client, message):
     loan_list = db.deposits.find({'type': 'loan'})
-    loan_formatted_list = [f"{item['name']} {item['currency']} {item['amount']}" for item in loan_list]
-    loan_text = '\n'.join(loan_formatted_list) if loan_formatted_list else 'No loan records found.'
-    message.reply_text(f"Loan records:\n{loan_text}")
+    loan_tokens = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'tokens']
+    loan_gems = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'gems']
+    loan_coins = [f"{item['name']} {item['amount']}" for item in loan_list if item['currency'] == 'coins']
 
-def is_owner(user_id):
-    return user_id in owners
+    loan_tokens_text = '\n'.join(loan_tokens) if loan_tokens else 'No token loans.'
+    loan_gems_text = '\n'.join(loan_gems) if loan_gems else 'No gem loans.'
+    loan_coins_text = '\n'.join(loan_coins) if loan_coins else 'No coin loans.'
 
-def is_sudo_user(user_id):
-    return user_id in sudo_users
+    message.reply_text(
+        f"Token Loans:\n{loan_tokens_text}\n\nGem Loans:\n{loan_gems_text}\n\nCoin Loans:\n{loan_coins_text}"
+    )
+
+@client.on_message(filters.command("info") & (filters.private | filters.group))
+def info_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) == 1:
+        name = args[0]
+        deposit_record = db.deposits.find_one({'name': name, 'type': 'deposit'})
+        loan_record = db.deposits.find_one({'name': name, 'type': 'loan'})
+
+        deposit_text = (
+            f"Deposit : {deposit_record['currency']} {deposit_record['amount']}" if deposit_record else 'No deposit record'
+        )
+        loan_text = (
+            f"Loan : {loan_record['currency']} {loan_record['amount']}" if loan_record else 'No loan record'
+        )
+
+        message.reply_text(f"Name : {name}\n{deposit_text}\n{loan_text}")
+    else:
+        message.reply_text('Invalid command format. Use /info {name}')
+
+@client.on_message(filters.command("help") & (filters.private | filters.group))
+def help_handler(client, message):
+    help_text = (
+        "Welcome to Uzumaki Clan Deposit Bot!\n\n"
+        "Available commands:\n"
+        "/add_deposit {name} {gems/tokens/coins} {amount}\n"
+        "/add_loan {name} {gems/tokens/coins} {amount}\n"
+        "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
+        "/edit_deposit {name} {gems/tokens/coins} {amount}\n"
+        "/edit_loan {name} {gems/tokens/coins} {amount}\n"
+        "/list\n"
+        "/deposit\n"
+        "/loan\n"
+        "/info {name}\n"
+        "/help"
+    )
+
+    message.reply_text(help_text)
 
 client.run()
