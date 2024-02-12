@@ -23,16 +23,10 @@ db = db_client['naruto_game']
 
 # Owners who can add sudo users
 owners = {6916220465}  # Add the specified user ID to the owners set
+ sudo_users = {6916220465, 1234567890}  # Add other sudo user IDs as needed
 
-def load_sudo_users():
-    sudo_users_data = db.settings.find_one({'key': 'sudo_users'})
-    return set(sudo_users_data['value']) if sudo_users_data else set()
-
-def save_sudo_users(sudo_users_set):
-    db.settings.update_one({'key': 'sudo_users'}, {'$set': {'value': list(sudo_users_set)}}, upsert=True)
-
-# Load sudo users on startup
-sudo_users = load_sudo_users()
+def is_sudo_user(user_id):
+    return user_id in sudo_users
 
 def get_role_link(role):
     if role == "leader":
@@ -77,16 +71,6 @@ def start_handler(client, message):
     welcome_message = "Welcome! The bot has started. Use /start to see available commands."
     client.send_message(message.chat.id, welcome_message)
 
-@client.on_message(filters.command("addsudo") & filters.private)
-def addsudo_handler(client, message):
-    if is_owner(message.from_user.id):
-        user_id = message.text.split()[1]
-        sudo_users.add(int(user_id))
-        save_sudo_users(sudo_users)
-        message.reply_text(f'Successfully added user with ID {user_id} to sudo users.')
-    else:
-        message.reply_text('You are not authorized to use this command.')
-
 @client.on_message(filters.command("addowner") & filters.private)
 def addowner_handler(client, message):
     if is_owner(message.from_user.id):
@@ -96,6 +80,7 @@ def addowner_handler(client, message):
     else:
         message.reply_text('You are not authorized to use this command.')
 
+@client.on_message(filters.command("add_deposit") & (filters.private | filters.group))
 @client.on_message(filters.command("add_deposit") & (filters.private | filters.group))
 def add_deposit_handler(client, message):
     if is_sudo_user(message.from_user.id):
