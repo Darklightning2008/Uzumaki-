@@ -1,4 +1,4 @@
-
+# naruto_bot.py
 
 from pyrogram import Client, filters
 from pymongo import MongoClient
@@ -28,7 +28,7 @@ def is_sudo_user(user_id):
     return user_id in sudo_users
 
 def save_sudo_users(users):
-    
+    pass
 
 @client.on_message(filters.command("edit_deposit") & is_sudo_user)
 def edit_deposit_handler(client, message):
@@ -69,8 +69,6 @@ def clear_handler(client, message):
     else:
         message.reply_text('Invalid command format. Use /clear {name} {deposit/loan}')
 
-
- 
 @client.on_message(filters.command("loan") & (filters.private | filters.group))
 def loan_handler(client, message):
     loan_list = db.deposits.find({'type': 'loan'})
@@ -82,32 +80,6 @@ def deposit_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
     deposit_text = '\n'.join([f"{item['name']} {item['amount']} {item['currency']}" for item in deposit_list])
     message.reply_text(deposit_text or 'No deposit records.')
-
-@client.on_message(filters.command("list") & (filters.private | filters.group))
-def list_handler(client, message):
-    deposit_list = db.deposits.find({'type': 'deposit'})
-    loan_list = db.deposits.find({'type': 'loan'})
-
-    deposit_tokens = [f"{item['name']} {item['amount']} {item['currency']}" for item in deposit_list if item['currency'] == 'tokens']
-    deposit_gems = [f"{item['name']} {item['amount']} {item['currency']}" for item in deposit_list if item['currency'] == 'gems']
-    deposit_coins = [f"{item['name']} {item['amount']} {item['currency']}" for item in deposit_list if item['currency'] == 'coins']
-
-    loan_tokens = [f"{item['name']} {item['amount']} {item['currency']}" for item in loan_list if item['currency'] == 'tokens']
-    loan_gems = [f"{item['name']} {item['amount']} {item['currency']}" for item in loan_list if item['currency'] == 'gems']
-    loan_coins = [f"{item['name']} {item['amount']} {item['currency']}" for item in loan_list if item['currency'] == 'coins']
-
-    deposit_tokens_text = '\n'.join(deposit_tokens) if deposit_tokens else 'No token deposits.'
-    deposit_gems_text = '\n'.join(deposit_gems) if deposit_gems else 'No gem deposits.'
-    deposit_coins_text = '\n'.join(deposit_coins) if deposit_coins else 'No coin deposits.'
-
-    loan_tokens_text = '\n'.join(loan_tokens) if loan_tokens else 'No token loans.'
-    loan_gems_text = '\n'.join(loan_gems) if loan_gems else 'No gem loans.'
-    loan_coins_text = '\n'.join(loan_coins) if loan_coins else 'No coin loans.'
-
-    message.reply_text(
-        f"Token Deposits:\n{deposit_tokens_text}\n\nGem Deposits:\n{deposit_gems_text}\n\nCoin Deposits:\n{deposit_coins_text}\n\n"
-        f"Token Loans:\n{loan_tokens_text}\n\nGem Loans:\n{loan_gems_text}\n\nCoin Loans:\n{loan_coins_text}"
-    )
 
 @client.on_message(filters.command("info") & (filters.private | filters.group))
 def info_handler(client, message):
@@ -133,7 +105,6 @@ def help_handler(client, message):
         "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
         "/edit_deposit {name} {gems/tokens/coins} {amount}\n"
         "/edit_loan {name} {gems/tokens/coins} {amount}\n"
-        "/list\n"
         "/info {name}\n"
         "/help"
     )
