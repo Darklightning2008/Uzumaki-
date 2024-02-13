@@ -1,4 +1,4 @@
-
+# naruto_bot.py
 
 from pyrogram import Client, filters
 from pymongo import MongoClient
@@ -37,14 +37,14 @@ def edit_handler(client, message):
         name, record_type, currency, amount = args
         valid_record_types = ['deposit', 'loan']
         if record_type in valid_record_types:
-            filter_condition = {'name': name, 'currency': currency, 'type': record_type}
+            filter_condition = {'name': name, 'type': record_type}
             update_data = {'$set': {'amount': int(amount)}}
             db.deposits.update_one(filter_condition, update_data)
             message.reply_text(f'Successfully edited {record_type} for {name}. New amount: {amount}')
         else:
-            message.reply_text(f'Invalid record type. Use /edit {name} {deposit/loan} {gems/tokens/coins} {new_amount}')
+            message.reply_text(f'Invalid record type. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
     else:
-        message.reply_text('Invalid command format. Use /edit {name} {deposit/loan} {gems/tokens/coins} {new_amount}')
+        message.reply_text('Invalid command format. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
 
 @client.on_message(filters.command("clear") & is_sudo_user)
 def clear_handler(client, message):
@@ -57,9 +57,9 @@ def clear_handler(client, message):
             db.deposits.delete_many(filter_condition)
             message.reply_text(f'Successfully cleared {record_type} record for {name}.')
         else:
-            message.reply_text(f'Invalid record type. Use /clear {name} {" or ".join(valid_record_types)}')
+            message.reply_text(f'Invalid record type. Use /clear {name} {{"deposit" or "loan"}}')
     else:
-        message.reply_text('Invalid command format. Use /clear {name} {deposit/loan}')
+        message.reply_text('Invalid command format. Use /clear {name} {{"deposit" or "loan"}}')
 
 @client.on_message(filters.command("loan") & (filters.private | filters.group))
 def loan_handler(client, message):
