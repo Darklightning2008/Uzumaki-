@@ -24,7 +24,8 @@ db = db_client['naruto_game']
 
 sudo_users = {6916220465, 1234567890}
 
-def is_sudo_user(user_id):
+def is_sudo_user(_, message):
+    user_id = message.from_user.id
     return user_id in sudo_users
 
 def save_sudo_users(users):
