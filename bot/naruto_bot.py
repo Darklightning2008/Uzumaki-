@@ -28,7 +28,7 @@ def is_sudo_user(user_id):
     return user_id in sudo_users
 
 def save_sudo_users(users):
-    pass
+    
 
 @client.on_message(filters.command("edit_deposit") & is_sudo_user)
 def edit_deposit_handler(client, message):
@@ -69,6 +69,8 @@ def clear_handler(client, message):
     else:
         message.reply_text('Invalid command format. Use /clear {name} {deposit/loan}')
 
+
+ 
 @client.on_message(filters.command("loan") & (filters.private | filters.group))
 def loan_handler(client, message):
     loan_list = db.deposits.find({'type': 'loan'})
