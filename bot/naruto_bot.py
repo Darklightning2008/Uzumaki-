@@ -1,4 +1,4 @@
-# naruto_bot.py
+
 
 from pyrogram import Client, filters
 from pymongo import MongoClient
@@ -30,29 +30,21 @@ def is_sudo_user(user_id):
 def save_sudo_users(users):
     pass
 
-@client.on_message(filters.command("edit_deposit") & is_sudo_user)
-def edit_deposit_handler(client, message):
+@client.on_message(filters.command("edit") & is_sudo_user)
+def edit_handler(client, message):
     args = message.text.split()[1:]
-    if len(args) == 3:
-        name, currency, amount = args
-        filter_condition = {'name': name, 'currency': currency, 'type': 'deposit'}
-        update_data = {'$set': {'amount': int(amount)}}
-        db.deposits.update_one(filter_condition, update_data)
-        message.reply_text(f'Successfully edited deposit for {name}. New amount: {amount}')
+    if len(args) == 4:
+        name, record_type, currency, amount = args
+        valid_record_types = ['deposit', 'loan']
+        if record_type in valid_record_types:
+            filter_condition = {'name': name, 'currency': currency, 'type': record_type}
+            update_data = {'$set': {'amount': int(amount)}}
+            db.deposits.update_one(filter_condition, update_data)
+            message.reply_text(f'Successfully edited {record_type} for {name}. New amount: {amount}')
+        else:
+            message.reply_text(f'Invalid record type. Use /edit {name} {deposit/loan} {gems/tokens/coins} {new_amount}')
     else:
-        message.reply_text('Invalid command format. Use /edit_deposit {name} {gems/tokens/coins} {new_amount}')
-
-@client.on_message(filters.command("edit_loan") & is_sudo_user)
-def edit_loan_handler(client, message):
-    args = message.text.split()[1:]
-    if len(args) == 3:
-        name, currency, amount = args
-        filter_condition = {'name': name, 'currency': currency, 'type': 'loan'}
-        update_data = {'$set': {'amount': int(amount)}}
-        db.deposits.update_one(filter_condition, update_data)
-        message.reply_text(f'Successfully edited loan for {name}. New amount: {amount}')
-    else:
-        message.reply_text('Invalid command format. Use /edit_loan {name} {gems/tokens/coins} {new_amount}')
+        message.reply_text('Invalid command format. Use /edit {name} {deposit/loan} {gems/tokens/coins} {new_amount}')
 
 @client.on_message(filters.command("clear") & is_sudo_user)
 def clear_handler(client, message):
@@ -103,8 +95,6 @@ def help_handler(client, message):
         "/add_deposit {name} {gems/tokens/coins} {amount}\n"
         "/add_loan {name} {gems/tokens/coins} {amount}\n"
         "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
-        "/edit_deposit {name} {gems/tokens/coins} {amount}\n"
-        "/edit_loan {name} {gems/tokens/coins} {amount}\n"
         "/info {name}\n"
         "/help"
     )
