@@ -22,7 +22,7 @@ client = Client(
 db_client = MongoClient(MONGO_URI)
 db = db_client['naruto_game']
 
-sudo_users = {6916220465, 1778618019, 1783097017}
+sudo_users = {6916220465, 1234567890}
 
 def is_sudo_user(_, message):
     user_id = message.from_user.id
@@ -30,6 +30,26 @@ def is_sudo_user(_, message):
 
 def save_sudo_users(users):
     pass
+
+@client.on_message(filters.command("add_deposit") & is_sudo_user)
+def add_deposit_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) == 3:
+        name, currency, amount = args
+        db.deposits.insert_one({'name': name, 'type': 'deposit', 'currency': currency, 'amount': int(amount)})
+        message.reply_text(f'Successfully added deposit for {name}. Amount: {amount} {currency}')
+    else:
+        message.reply_text('Invalid command format. Use /add_deposit {name} {gems/tokens/coins} {amount}')
+
+@client.on_message(filters.command("add_loan") & is_sudo_user)
+def add_loan_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) == 3:
+        name, currency, amount = args
+        db.deposits.insert_one({'name': name, 'type': 'loan', 'currency': currency, 'amount': int(amount)})
+        message.reply_text(f'Successfully added loan for {name}. Amount: {amount} {currency}')
+    else:
+        message.reply_text('Invalid command format. Use /add_loan {name} {gems/tokens/coins} {amount}')
 
 @client.on_message(filters.command("edit") & is_sudo_user)
 def edit_handler(client, message):
@@ -92,7 +112,7 @@ def info_handler(client, message):
 @client.on_message(filters.command("help") & (filters.private | filters.group))
 def help_handler(client, message):
     help_text = (
-        "Welcome to Uzumaki Clan Deposit Bot!\n\n"
+        "Welcome to Uzumaki Clan Deposit Bot!,Use these commands:\n\n"
         "/add_deposit {name} {gems/tokens/coins} {amount}\n"
         "/add_loan {name} {gems/tokens/coins} {amount}\n"
         "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
