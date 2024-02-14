@@ -1,4 +1,4 @@
-# naruto_bot.py
+
 
 from pyrogram import Client, filters
 from pymongo import MongoClient
@@ -66,6 +66,21 @@ def edit_handler(client, message):
             message.reply_text(f'Invalid record type. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
     else:
         message.reply_text('Invalid command format. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
+
+@client.on_message(filters.command("reset") & is_sudo_user)
+def reset_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) == 1:
+        record_type = args[0]
+        valid_record_types = ['deposit', 'loan']
+        if record_type in valid_record_types:
+            db.deposits.delete_many({'type': record_type})
+            message.reply_text(f'Successfully reset {record_type} records.')
+        else:
+            message.reply_text('Invalid record type. Use /reset {{"deposit" or "loan"}}')
+    else:
+        message.reply_text('Invalid command format. Use /reset {{"deposit" or "loan"}}')
+
 
 @client.on_message(filters.command("clear") & is_sudo_user)
 def clear_handler(client, message):
