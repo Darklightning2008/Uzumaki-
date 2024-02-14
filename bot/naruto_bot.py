@@ -125,5 +125,5 @@ def help_handler(client, message):
 @client.on_message(filters.command("start") & (filters.private | filters.group))
 def start_handler(client, message):
     message.reply_text("Hi! I am a bot to maintain deposits in Uzumaki Clan.\nUse /help for a list of available commands.")
-
+print("Bot is alive") 
 client.run()
