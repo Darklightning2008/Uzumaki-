@@ -97,13 +97,13 @@ def clear_handler(client, message):
     else:
         message.reply_text('Invalid command format. Use /clear {name} {{"deposit" or "loan"}}')
 
-@client.on_message(filters.command("loan") & (filters.private | filters.group))
+@client.on_message(filters.command("loan_list") & (filters.private | filters.group))
 def loan_handler(client, message):
     loan_list = db.deposits.find({'type': 'loan'})
     loan_text = '\n'.join([f"{item['name']} {item['amount']} {item['currency']}" for item in loan_list])
     message.reply_text(loan_text or 'No loan records.')
 
-@client.on_message(filters.command("deposit") & (filters.private | filters.group))
+@client.on_message(filters.command("deposit_list") & (filters.private | filters.group))
 def deposit_handler(client, message):
     deposit_list = db.deposits.find({'type': 'deposit'})
     deposit_text = '\n'.join([f"{item['name']} {item['amount']} {item['currency']}" for item in deposit_list])
