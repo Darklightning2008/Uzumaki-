@@ -21,8 +21,8 @@ db = db_client.get_database('naruto_game')
 # List of sudo users who can use /add, /edit, /clear
 sudo_users = {1778618019, 1783097017, 6916220465, 1234567890}
 
-# Check if a user is a sudo user
-def is_sudo_user(_, __, message):
+# Function to check if a user is a sudo user
+def is_sudo_user(message):
     return message.from_user.id in sudo_users
 
 # Function to log actions to a specified channel
@@ -95,9 +95,9 @@ def edit_handler(client, message):
             message.reply_text(f'Successfully edited {record_type} for {name}. New amount: {amount}')
             log_action("edit", name, record_type, currency, amount, message.from_user.id, name)
         else:
-            message.reply_text(f'Invalid record type. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
+            message.reply_text(f'Invalid record type. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {amount}')
     else:
-        message.reply_text('Invalid command format. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
+        message.reply_text('Invalid command format. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {amount}')
 
 # /clear command handler
 @client.on_message(filters.command("clear") & is_sudo_user)
@@ -107,9 +107,8 @@ def clear_handler(client, message):
         name, record_type = args
         valid_record_types = ['deposit', 'loan']
         if record_type in valid_record_types:
-            filter_condition = {'name': name, 'type': record_type}
-            db.deposits.delete_many(filter_condition)
-            message.reply_text(f'Successfully cleared {record_type} record for {name}.')
+            db.deposits.delete_one({'name': name, 'type': record_type})
+            message.reply_text(f'Successfully cleared {record_type} for {name}.')
             log_action("clear", name, record_type, "", 0, message.from_user.id, name)
         else:
             message.reply_text(f'Invalid record type. Use /clear {name} {{"deposit" or "loan"}}')
@@ -212,76 +211,6 @@ def broadcast_handler(client, message):
         except Exception as e:
             print(f"Error sending broadcast to user {user_id}: {e}")
     message.reply_text("Broadcast sent to all users.")
-
-# /reset command handler
-@client.on_message(filters.command("reset") & is_sudo_user)
-def reset_handler(client, message):
-    args = message.text.split()[1:]
-    if len(args) == 1:
-        record_type = args[0]
-        valid_record_types = ['deposit', 'loan']
-        if record_type in valid_record_types:
-            db.deposits.delete_many({'type': record_type})
-            message.reply_text(f'Successfully reset {record_type} records.')
-        else:
-            message.reply_text('Invalid record type. Use /reset {{"deposit" or "loan"}}')
-    else:
-        message.reply_text('Invalid command format. Use /reset {{"deposit" or "loan"}}')
-
-# /info command handler
-@client.on_message(filters.command("info") & (filters.private | filters.group))
-def info_handler(client, message):
-    args = message.text.split()[1:]
-    if len(args) == 1:
-        name = args[0]
-        user = message.from_user
-        target_user = None
-
-        # Check if the provided name is a username
-        if name.startswith('@'):
-            username = name[1:]
-            try:
-                target_user = client.get_users(username)
-            except Exception as e:
-                print(f"Error getting user by username: {e}")
-
-        # If the provided name is not a username or couldn't be fetched, use it as a display name
-        if target_user is None:
-            target_user = user
-
-        deposit_info = db.deposits.find_one({'name': target_user.username, 'type': 'deposit'}) or \
-                       db.deposits.find_one({'name': target_user.first_name, 'type': 'deposit'})
-        loan_info = db.deposits.find_one({'name': target_user.username, 'type': 'loan'}) or \
-                    db.deposits.find_one({'name': target_user.first_name, 'type': 'loan'})
-
-        deposit_text = f"Deposit: {deposit_info['amount']} {deposit_info['currency']}" if deposit_info else "No deposit record"
-        loan_text = f"Loan: {loan_info['amount']} {loan_info['currency']}" if loan_info else "No loan record"
-
-        message.reply_text(
-            f"Name: {target_user.first_name} ({target_user.username})\n"
-            f"{deposit_text}\n"
-            f"{loan_text}"
-        )
-    else:
-        message.reply_text('Invalid command format. Use /info {name}')
-
-# /help command handler
-@client.on_message(filters.command("help") & (filters.private | filters.group))
-def help_handler(client, message):
-    help_text = (
-        "List of available commands:\n"
-        "/start - Start the bot\n"
-        "/reset {deposit/loan} - Reset all deposit or loan records\n"
-        "/add_deposit {name} {gems/tokens/coins} {amount} - Add a deposit record\n"
-        "/add_loan {name} {gems/tokens/coins} {amount} - Add a loan record\n"
-        "/edit {name} {deposit/loan} {gems/tokens/coins} {amount} - Edit a deposit or loan record\n"
-        "/clear {name} {deposit/loan} - Clear a deposit or loan record\n"
-        "/info {name} - Get information about a user's deposit and loan\n"
-        "/deposit_list - View a list of deposit records\n"
-        "/loan_list - View a list of loan records\n"
-        "/broadcast {message} - Broadcast a message to all users\n"
-    )
-    message.reply_text(help_text)
 
 # Run the bot
 client.run()
