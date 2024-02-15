@@ -22,7 +22,7 @@ client = Client(
 db_client = MongoClient(MONGO_URI)
 db = db_client['naruto_game']
 
-sudo_users = {6916220465, 1234567890}
+sudo_users = {6916220465, 1783097017, 1778618019}
 
 def is_sudo_user(_, message):
     user_id = message.from_user.id
