@@ -1,4 +1,4 @@
-
+# naruto_bot.py
 
 from pyrogram import Client, filters
 from pymongo import MongoClient
@@ -67,21 +67,6 @@ def edit_handler(client, message):
     else:
         message.reply_text('Invalid command format. Use /edit {name} {{"deposit" or "loan"}} {{"gems" or "tokens" or "coins"}} {new_amount}')
 
-@client.on_message(filters.command("reset") & is_sudo_user)
-def reset_handler(client, message):
-    args = message.text.split()[1:]
-    if len(args) == 1:
-        record_type = args[0]
-        valid_record_types = ['deposit', 'loan']
-        if record_type in valid_record_types:
-            db.deposits.delete_many({'type': record_type})
-            message.reply_text(f'Successfully reset {record_type} records.')
-        else:
-            message.reply_text('Invalid record type. Use /reset {{"deposit" or "loan"}}')
-    else:
-        message.reply_text('Invalid command format. Use /reset {{"deposit" or "loan"}}')
-
-
 @client.on_message(filters.command("clear") & is_sudo_user)
 def clear_handler(client, message):
     args = message.text.split()[1:]
@@ -114,20 +99,35 @@ def info_handler(client, message):
     args = message.text.split()[1:]
     if len(args) == 1:
         name = args[0]
-        deposit_info = db.deposits.find_one({'name': name, 'type': 'deposit'})
-        loan_info = db.deposits.find_one({'name': name, 'type': 'loan'})
+        user = message.from_user
+        target_user = None
+
+        # Check if the provided name is a username
+        if name.startswith('@'):
+            username = name[1:]
+            try:
+                target_user = client.get_users(username)
+            except Exception as e:
+                print(f"Error getting user by username: {e}")
+
+        # If the provided name is not a username or couldn't be fetched, use it as a display name
+        if target_user is None:
+            target_user = user
+
+        deposit_info = db.deposits.find_one({'name': target_user.username, 'type': 'deposit'})
+        loan_info = db.deposits.find_one({'name': target_user.username, 'type': 'loan'})
 
         deposit_text = f"Deposit: {deposit_info['amount']} {deposit_info['currency']}" if deposit_info else 'No deposit.'
         loan_text = f"Loan: {loan_info['amount']} {loan_info['currency']}" if loan_info else 'No loan.'
 
-        message.reply_text(f"Name: {name}\n{deposit_text}\n{loan_text}")
+        message.reply_text(f"Name: {target_user.first_name}\n{deposit_text}\n{loan_text}")
     else:
         message.reply_text('Invalid command format. Use /info {name}')
 
 @client.on_message(filters.command("help") & (filters.private | filters.group))
 def help_handler(client, message):
     help_text = (
-        "Welcome to Uzumaki Clan Deposit Bot!,Use these commands:\n\n"
+        "Welcome to Uzumaki Clan Deposit Bot!\n\n"
         "/add_deposit {name} {gems/tokens/coins} {amount}\n"
         "/add_loan {name} {gems/tokens/coins} {amount}\n"
         "/edit {name} {deposit/loan} {gems/tokens/coins} {amount}\n"
@@ -140,5 +140,19 @@ def help_handler(client, message):
 @client.on_message(filters.command("start") & (filters.private | filters.group))
 def start_handler(client, message):
     message.reply_text("Hi! I am a bot to maintain deposits in Uzumaki Clan.\nUse /help for a list of available commands.")
-print("Bot is alive") 
+
+@client.on_message(filters.command("reset") & is_sudo_user)
+def reset_handler(client, message):
+    args = message.text.split()[1:]
+    if len(args) == 1:
+        record_type = args[0]
+        valid_record_types = ['deposit', 'loan']
+        if record_type in valid_record_types:
+            db.deposits.delete_many({'type': record_type})
+            message.reply_text(f'Successfully reset {record_type} records.')
+        else:
+            message.reply_text('Invalid record type. Use /reset {{"deposit" or "loan"}}')
+    else:
+        message.reply_text('Invalid command format. Use /reset {{"deposit" or "loan"}}')
+
 client.run()
