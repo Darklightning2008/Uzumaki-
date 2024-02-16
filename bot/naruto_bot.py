@@ -29,7 +29,7 @@ def is_sudo_user(_, message):
 def log_action(action, name, record_type, currency, amount, sudo_user, target_user):
     log_text = (
         f"Name: {name}\n"
-        f"Sudo: {sudo_user.first_name}\n"
+        f"Sudo: {sudo_user}\n"
         f"Deposit: {currency} {amount}\n"
         f"Loan: {record_type} {currency} {amount}\n"
         f"I'd: {sudo_user.id}\n"
