@@ -197,6 +197,35 @@ def loan_list_handler(client, message):
 
     reply_text = "\n".join([f"{currency.capitalize()}:\n{', '.join(loan_text[currency])}" for currency in currencies])
     message.reply_text(f"Loan List:\n{reply_text}")
+# /total_loan command handler
+@client.on_message(filters.command("total_loan") & is_sudo_user)
+def total_loan_handler(client, message):
+    currencies = ['tokens', 'gems', 'coins']
+    total_loan = {currency: 0 for currency in currencies}
+
+    loan_records = db.deposits.find({'type': 'loan'})
+    for record in loan_records:
+        currency = record['currency']
+        if currency in currencies:
+            total_loan[currency] += record['amount']
+
+    reply_text = "\n".join([f"{currency.capitalize()}: {total_loan[currency]}" for currency in currencies])
+    message.reply_text(f"Total Loan:\n{reply_text}")
+
+# /total_deposit command handler
+@client.on_message(filters.command("total_deposit") & is_sudo_user)
+def total_deposit_handler(client, message):
+    currencies = ['tokens', 'gems', 'coins']
+    total_deposit = {currency: 0 for currency in currencies}
+
+    deposit_records = db.deposits.find({'type': 'deposit'})
+    for record in deposit_records:
+        currency = record['currency']
+        if currency in currencies:
+            total_deposit[currency] += record['amount']
+
+    reply_text = "\n".join([f"{currency.capitalize()}: {total_deposit[currency]}" for currency in currencies])
+    message.reply_text(f"Total Deposit:\n{reply_text}")
 
 # /broadcast command handler
 @client.on_message(filters.command("broadcast") & is_sudo_user)
