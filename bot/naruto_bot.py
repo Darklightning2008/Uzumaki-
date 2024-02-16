@@ -26,14 +26,16 @@ sudo_users = {1778618019, 1783097017, 6916220465, 1234567890}
 def is_sudo_user(_, message):
     return message.from_user.id in sudo_users
 
+
 # Function to log actions to a specified channel
-def log_action(action, name, record_type, currency, amount, sudo_user, target_user):
+def log_action(action, name, record_type, currency, amount, sudo_user_id, target_user):
+    sudo_user = client.get_users(sudo_user_id)
     log_text = (
         f"Name: {name}\n"
-        f"Sudo: {sudo_user}\n"
+        f"Sudo: {sudo_user.first_name}\n"
         f"Deposit: {currency} {amount}\n"
         f"Loan: {record_type} {currency} {amount}\n"
-        f"I'd: {sudo_user}\n"
+        f"I'd: {sudo_user_id}\n"
         f"Target I'd: {target_user}\n"
         f"Username: {sudo_user.username}\n"
     )
