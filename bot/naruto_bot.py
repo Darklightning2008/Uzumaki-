@@ -21,6 +21,7 @@ db = db_client.get_database('naruto_game')
 # List of sudo users who can use /add, /edit, /clear
 sudo_users = {1778618019, 1783097017, 6916220465, 1234567890}
 
+
 # Function to check if a user is a sudo user
 def is_sudo_user(_, message):
     return message.from_user.id in sudo_users
@@ -32,8 +33,8 @@ def log_action(action, name, record_type, currency, amount, sudo_user, target_us
         f"Sudo: {sudo_user}\n"
         f"Deposit: {currency} {amount}\n"
         f"Loan: {record_type} {currency} {amount}\n"
-        f"I'd: {sudo_user.id}\n"
-        f"Target I'd: {target_user.id}\n"
+        f"I'd: {sudo_user}\n"
+        f"Target I'd: {target_user}\n"
         f"Username: {sudo_user.username}\n"
     )
     log_channel = -1001717003494  # Replace with your log channel ID
