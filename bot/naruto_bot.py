@@ -33,7 +33,7 @@ def log_action(action, name, record_type, currency, amount, sudo_user_id, target
         f"Sudo: {sudo_user_id}\n"
         f"Target User: {target_user_name}\n"
     )
-    log_channel = os.getenv('LOG_CHANNEL')
+    log_channel = -1001717003494  # Replace with your log channel ID
     if log_channel:
         client.send_message(log_channel, f"{action.capitalize()} Action:\n{log_text}")
 
@@ -118,24 +118,17 @@ def clear_handler(client, message):
 # /info command handler
 @client.on_message(filters.command("info") & (filters.private | filters.group))
 def info_handler(client, message):
-    args = message.text.split()[1:]
-    if len(args) == 1:
-        name = args[0]
-        user = message.from_user
-        target_user = None
+    target_user = None
+    if message.reply_to_message:
+        target_user = message.reply_to_message.from_user
+    elif len(message.command) == 2:
+        username = message.command[1].lstrip('@')
+        try:
+            target_user = client.get_users(username)
+        except Exception as e:
+            print(f"Error getting user by username: {e}")
 
-        # Check if the provided name is a username
-        if name.startswith('@'):
-            username = name[1:]
-            try:
-                target_user = client.get_users(username)
-            except Exception as e:
-                print(f"Error getting user by username: {e}")
-
-        # If the provided name is not a username or couldn't be fetched, use it as a display name
-        if target_user is None:
-            target_user = user
-
+    if target_user:
         deposit_info = db.deposits.find_one({'name': target_user.username, 'type': 'deposit'}) or \
                        db.deposits.find_one({'name': target_user.first_name, 'type': 'deposit'})
         loan_info = db.deposits.find_one({'name': target_user.username, 'type': 'loan'}) or \
@@ -145,9 +138,9 @@ def info_handler(client, message):
         loan_text = f"Loan: {loan_info['amount']} {loan_info['currency']}" if loan_info else "No loan record"
 
         message.reply_text(
-            f"Name: {target_user.first_name} ({target_user.username})\n"
-            f"{deposit_text}\n"
-            f"{loan_text}"
+            f"• Name: {target_user.first_name} ({target_user.username})\n"
+            f"• {deposit_text}\n"
+            f"• {loan_text}"
         )
     else:
         message.reply_text('Invalid command format. Use /info {name}')
