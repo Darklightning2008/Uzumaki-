@@ -22,7 +22,7 @@ db = db_client.get_database('naruto_game')
 sudo_users = {1778618019, 1783097017, 6916220465, 1234567890}
 
 # Function to check if a user is a sudo user
-def is_sudo_user(message):
+def is_sudo_user(_, message):
     return message.from_user.id in sudo_users
 
 # Function to log actions to a specified channel
