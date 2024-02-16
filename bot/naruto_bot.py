@@ -26,12 +26,15 @@ def is_sudo_user(_, message):
     return message.from_user.id in sudo_users
 
 # Function to log actions to a specified channel
-def log_action(action, name, record_type, currency, amount, sudo_user_id, target_user_name):
+def log_action(action, name, record_type, currency, amount, sudo_user, target_user):
     log_text = (
         f"Name: {name}\n"
-        f"Deposit/Loan: {currency} {amount}\n"
-        f"Sudo: {sudo_user_id}\n"
-        f"Target User: {target_user_name}\n"
+        f"Sudo: {sudo_user.first_name}\n"
+        f"Deposit: {currency} {amount}\n"
+        f"Loan: {record_type} {currency} {amount}\n"
+        f"I'd: {sudo_user.id}\n"
+        f"Target I'd: {target_user.id}\n"
+        f"Username: {sudo_user.username}\n"
     )
     log_channel = -1001717003494  # Replace with your log channel ID
     if log_channel:
